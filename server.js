@@ -634,7 +634,23 @@ app.put("/api/bookings/:id/status", authenticateToken, checkSubscription, async 
 });
 
 // Статические файлы - размещаем ПОСЛЕ API маршрутов, но ПЕРЕД обработчиком SPA
-const staticPath = __dirname;
+// Для Vercel используем правильный путь
+const staticPath = process.env.VERCEL ? process.cwd() : __dirname;
+
+// Явная обработка статических файлов
+app.get('/styles.css', (req, res) => {
+  res.sendFile(path.join(staticPath, 'styles.css'), {
+    headers: { 'Content-Type': 'text/css' }
+  });
+});
+
+app.get('/script.js', (req, res) => {
+  res.sendFile(path.join(staticPath, 'script.js'), {
+    headers: { 'Content-Type': 'application/javascript' }
+  });
+});
+
+// Общая обработка статических файлов
 app.use(express.static(staticPath, {
   index: false,
   dotfiles: 'ignore',
