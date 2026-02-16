@@ -16,7 +16,10 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-producti
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+
+// Статические файлы - для Vercel используем правильный путь
+const staticPath = process.env.VERCEL ? path.join(process.cwd(), '.') : __dirname;
+app.use(express.static(staticPath));
 
 // Пути к файлам данных
 const DATA_DIR = path.join(__dirname, "data");
@@ -634,9 +637,32 @@ app.put("/api/bookings/:id/status", authenticateToken, checkSubscription, async 
   }
 });
 
-// Запуск сервера
-initData().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Сервер запущен на http://localhost:${PORT}`);
+// Обработка всех маршрутов для SPA (должно быть после всех API маршрутов)
+app.get('*', (req, res, next) => {
+  // Если это API запрос, пропускаем дальше
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  // Иначе отдаем index.html для SPA
+  const staticPath = process.env.VERCEL ? path.join(process.cwd(), '.') : __dirname;
+  res.sendFile(path.join(staticPath, 'index.html'), (err) => {
+    if (err) {
+      res.status(404).send('File not found');
+    }
   });
 });
+
+// Для Vercel: экспортируем app как serverless function
+export default app;
+
+// Для локального запуска: запускаем сервер
+if (!process.env.VERCEL) {
+  initData().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Сервер запущен на http://localhost:${PORT}`);
+    });
+  });
+} else {
+  // Для Vercel: инициализируем данные при первом запросе
+  initData().catch(console.error);
+}
