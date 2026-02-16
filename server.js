@@ -18,8 +18,12 @@ app.use(cors());
 app.use(express.json());
 
 // Статические файлы - для Vercel используем правильный путь
-const staticPath = process.env.VERCEL ? path.join(process.cwd(), '.') : __dirname;
-app.use(express.static(staticPath));
+// На Vercel файлы находятся в корне проекта
+const staticPath = process.env.VERCEL ? process.cwd() : __dirname;
+app.use(express.static(staticPath, {
+  index: false, // Не используем index как индексный файл для директорий
+  extensions: ['html', 'css', 'js', 'json', 'png', 'jpg', 'jpeg', 'gif', 'svg']
+}));
 
 // Пути к файлам данных
 const DATA_DIR = path.join(__dirname, "data");
@@ -643,10 +647,15 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/')) {
     return next();
   }
+  // Если запрашивается статический файл (CSS, JS, изображения), пропускаем
+  if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    return next();
+  }
   // Иначе отдаем index.html для SPA
-  const staticPath = process.env.VERCEL ? path.join(process.cwd(), '.') : __dirname;
+  const staticPath = process.env.VERCEL ? process.cwd() : __dirname;
   res.sendFile(path.join(staticPath, 'index.html'), (err) => {
     if (err) {
+      console.error('Error sending index.html:', err);
       res.status(404).send('File not found');
     }
   });
