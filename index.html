@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GlobalStay — аренда жилья по всему миру</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="header__left">
+          <div class="logo">GlobalStay</div>
+          <nav class="nav">
+            <button class="nav__item nav__item--active">Главная</button>
+            <button class="nav__item">Избранное</button>
+            <button class="nav__item">Поездки</button>
+          </nav>
+        </div>
+        <div class="header__right">
+          <button class="header__host-btn">Сдать жильё</button>
+          <button class="header__profile">
+            <span class="header__profile-icon">👤</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="hero">
+          <div class="hero__content">
+            <h1 class="hero__title">
+              Найдите идеальное жильё<br />
+              для поездки в любую точку мира
+            </h1>
+            <p class="hero__subtitle">
+              Квартиры, дома и виллы от хозяев по всему миру. Гибкий поиск, прозрачные цены,
+              надёжные отзывы.
+            </p>
+
+            <div class="search-panel" id="search-panel">
+              <div class="search-panel__field">
+                <label for="location">Город / страна</label>
+                <input
+                  id="location"
+                  type="text"
+                  placeholder="Куда едем? Например, Барселона"
+                />
+              </div>
+              <div class="search-panel__field">
+                <label for="dates">Даты</label>
+                <input id="dates" type="text" placeholder="Добавьте даты" />
+              </div>
+              <div class="search-panel__field">
+                <label for="guests">Гости</label>
+                <input id="guests" type="text" placeholder="2 взрослых · 1 ребёнок" />
+              </div>
+              <button class="search-panel__button" id="search-button">Найти</button>
+            </div>
+
+            <div class="search-panel__quick">
+              <span class="label">Популярные направления:</span>
+              <button class="chip chip--outline">Париж</button>
+              <button class="chip chip--outline">Нью-Йорк</button>
+              <button class="chip chip--outline">Токио</button>
+              <button class="chip chip--outline">Стамбул</button>
+            </div>
+          </div>
+          <div class="hero__illustration">
+            <div class="hero__globe">
+              <div class="hero__orbit hero__orbit--1"></div>
+              <div class="hero__orbit hero__orbit--2"></div>
+              <div class="hero__orbit hero__orbit--3"></div>
+              <div class="hero__pin hero__pin--1"></div>
+              <div class="hero__pin hero__pin--2"></div>
+              <div class="hero__pin hero__pin--3"></div>
+            </div>
+            <div class="hero__stat-card">
+              <div class="hero__stat-number">120K+</div>
+              <div class="hero__stat-label">объектов по всему миру</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="filters">
+          <div class="filters__group">
+            <span class="label">Фильтры:</span>
+            <button class="chip chip--filter chip--active" data-filter="all">
+              Все варианты
+            </button>
+            <button class="chip chip--filter" data-filter="apartment">Квартиры</button>
+            <button class="chip chip--filter" data-filter="house">Дома</button>
+            <button class="chip chip--filter" data-filter="luxury">Премиум</button>
+            <button class="chip chip--filter" data-filter="instant">Мгновенное бронирование</button>
+          </div>
+          <div class="filters__group">
+            <button class="chip chip--ghost">Цена: до $150</button>
+            <button class="chip chip--ghost">⭐ 4+</button>
+            <button class="chip chip--ghost">С животными</button>
+            <button class="chip chip--ghost">Рабочее место</button>
+          </div>
+        </section>
+
+        <section class="content">
+          <div class="results">
+            <div class="results__header">
+              <div>
+                <h2>Подходящие варианты</h2>
+                <p class="results__count" id="results-count">Найдено 12 вариантов</p>
+              </div>
+              <select class="results__sort" id="sort-select">
+                <option value="recommended">Сначала рекомендуемые</option>
+                <option value="price-asc">Сначала дешевле</option>
+                <option value="price-desc">Сначала дороже</option>
+                <option value="rating-desc">По рейтингу</option>
+              </select>
+            </div>
+
+            <div class="results__list" id="results-list">
+              <!-- Карточки объявлений заполняются скриптом -->
+            </div>
+          </div>
+
+          <aside class="map">
+            <div class="map__header">
+              <h3>Карта</h3>
+              <span class="map__hint">Интерактивная карта будет подключена позже</span>
+            </div>
+            <div class="map__body">
+              <div class="map__placeholder">
+                <div class="map__gradient"></div>
+                <span class="map__placeholder-text">Здесь будет карта с объектами</span>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="footer__left">
+          <span>© 2026 GlobalStay</span>
+          <a href="#" class="footer__link">Условия</a>
+          <a href="#" class="footer__link">Конфиденциальность</a>
+        </div>
+        <div class="footer__right">
+          <button class="footer__lang">Русский (RU)</button>
+          <button class="footer__currency">USD $</button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="auth-modal">
+      <div class="modal__content">
+        <div class="modal__header">
+          <h2 class="modal__title" id="auth-title">Вход</h2>
+          <button class="modal__close">×</button>
+        </div>
+        <form id="auth-form" data-mode="login">
+          <div class="modal__field">
+            <label for="auth-name">Имя</label>
+            <input type="text" id="auth-name" name="name" placeholder="Ваше имя" style="display: none;" />
+          </div>
+          <div class="modal__field">
+            <label for="auth-email">Email</label>
+            <input type="email" id="auth-email" name="email" placeholder="your@email.com" required />
+          </div>
+          <div class="modal__field">
+            <label for="auth-password">Пароль</label>
+            <input type="password" id="auth-password" name="password" placeholder="Минимум 6 символов" required />
+          </div>
+          <button type="submit" class="modal__button" id="auth-submit">Войти</button>
+          <button type="button" class="modal__button modal__button--secondary" id="auth-mode-toggle">
+            Нет аккаунта? Зарегистрироваться
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal" id="profile-modal">
+      <div class="modal__content">
+        <div class="modal__header">
+          <h2 class="modal__title">Профиль</h2>
+          <button class="modal__close">×</button>
+        </div>
+        <div id="profile-content">
+          <p><strong>Имя:</strong> <span id="profile-name"></span></p>
+          <p><strong>Email:</strong> <span id="profile-email"></span></p>
+          <div id="profile-subscription"></div>
+          <div class="modal__footer">
+            <button class="modal__button modal__button--secondary" onclick="logout()">Выйти</button>
+            <button class="modal__button" onclick="showModal('subscription-modal')">Управление подпиской</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div class="modal" id="subscription-modal">
+      <div class="modal__content">
+        <div class="modal__header">
+          <h2 class="modal__title">Выберите план подписки</h2>
+          <button class="modal__close">×</button>
+        </div>
+        <div id="subscription-plans" style="display: grid; gap: 16px; margin-top: 24px;">
+          <!-- Plans will be loaded dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Property Modal -->
+    <div class="modal" id="property-modal">
+      <div class="modal__content">
+        <div class="modal__header">
+          <h2 class="modal__title">Разместить объект</h2>
+          <button class="modal__close">×</button>
+        </div>
+        <form id="property-form">
+          <div class="modal__field">
+            <label for="property-title">Название</label>
+            <input type="text" id="property-title" name="title" placeholder="Например: Уютная квартира в центре" required />
+          </div>
+          <div class="modal__field">
+            <label for="property-description">Описание</label>
+            <textarea id="property-description" name="description" placeholder="Опишите ваш объект"></textarea>
+          </div>
+          <div class="modal__field">
+            <label for="property-location">Местоположение</label>
+            <input type="text" id="property-location" name="location" placeholder="Город, Страна" required />
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="modal__field">
+              <label for="property-price">Цена за ночь ($)</label>
+              <input type="number" id="property-price" name="price" placeholder="100" required />
+            </div>
+            <div class="modal__field">
+              <label for="property-type">Тип</label>
+              <select id="property-type" name="type" required>
+                <option value="apartment">Квартира</option>
+                <option value="house">Дом</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div class="modal__field">
+              <label for="property-bedrooms">Спальни</label>
+              <input type="number" id="property-bedrooms" name="bedrooms" value="1" min="1" required />
+            </div>
+            <div class="modal__field">
+              <label for="property-bathrooms">Ванные</label>
+              <input type="number" id="property-bathrooms" name="bathrooms" value="1" min="1" required />
+            </div>
+            <div class="modal__field">
+              <label for="property-guests">Гостей</label>
+              <input type="number" id="property-guests" name="guests" value="2" min="1" required />
+            </div>
+          </div>
+          <div class="modal__field">
+            <label for="property-amenities">Удобства (через запятую)</label>
+            <input type="text" id="property-amenities" name="amenities" placeholder="Wi-Fi, Парковка, Кондиционер" />
+          </div>
+          <div class="modal__field">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="property-instant" name="instant" />
+              Мгновенное бронирование
+            </label>
+          </div>
+          <button type="submit" class="modal__button">Разместить объект</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal" id="booking-modal">
+      <div class="modal__content">
+        <div class="modal__header">
+          <h2 class="modal__title">Забронировать</h2>
+          <button class="modal__close">×</button>
+        </div>
+        <form id="booking-form">
+          <input type="hidden" id="booking-property-id" name="propertyId" />
+          <div class="modal__field">
+            <label for="booking-checkin">Дата заезда</label>
+            <input type="date" id="booking-checkin" name="checkIn" required />
+          </div>
+          <div class="modal__field">
+            <label for="booking-checkout">Дата выезда</label>
+            <input type="date" id="booking-checkout" name="checkOut" required />
+          </div>
+          <div class="modal__field">
+            <label for="booking-guests">Количество гостей</label>
+            <input type="number" id="booking-guests" name="guests" value="2" min="1" required />
+          </div>
+          <button type="submit" class="modal__button">Забронировать</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+      // Update auth form visibility
+      document.addEventListener("DOMContentLoaded", () => {
+        const authForm = document.getElementById("auth-form");
+        const authNameField = document.getElementById("auth-name");
+        
+        if (authForm && authNameField) {
+          // Initial state
+          const updateAuthForm = () => {
+            const isLogin = authForm.dataset.mode === "login";
+            authNameField.style.display = isLogin ? "none" : "block";
+            authNameField.required = !isLogin;
+          };
+          
+          updateAuthForm();
+          authForm.addEventListener("change", updateAuthForm);
+        }
+
+        // Update profile modal when opened
+        const profileModal = document.getElementById("profile-modal");
+        if (profileModal) {
+          profileModal.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("modal") || e.target.classList.contains("modal__close")) {
+              if (typeof updateProfileModal === "function") {
+                await updateProfileModal();
+              }
+            }
+          });
+        }
+
+        // Update subscription modal when opened
+        const subscriptionModal = document.getElementById("subscription-modal");
+        if (subscriptionModal) {
+          subscriptionModal.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("modal") || e.target.classList.contains("modal__close")) {
+              if (typeof loadSubscriptionPlansUI === "function") {
+                await loadSubscriptionPlansUI();
+              }
+            }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
