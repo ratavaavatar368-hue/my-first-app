@@ -17,16 +17,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-producti
 app.use(cors());
 app.use(express.json());
 
-// Статические файлы - для Vercel используем правильный путь
-// На Vercel файлы находятся в корне проекта, но нужно использовать __dirname
-const staticPath = __dirname;
-app.use(express.static(staticPath, {
-  index: false, // Не используем index как индексный файл для директорий
-  dotfiles: 'ignore',
-  etag: true,
-  lastModified: true
-}));
-
 // Пути к файлам данных
 const DATA_DIR = path.join(__dirname, "data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
@@ -643,13 +633,30 @@ app.put("/api/bookings/:id/status", authenticateToken, checkSubscription, async 
   }
 });
 
-// Обработка всех маршрутов для SPA (должно быть после всех API маршрутов)
+// Статические файлы - размещаем ПОСЛЕ API маршрутов, но ПЕРЕД обработчиком SPA
+const staticPath = __dirname;
+app.use(express.static(staticPath, {
+  index: false,
+  dotfiles: 'ignore',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Устанавливаем правильные MIME типы
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
+
+// Обработка всех маршрутов для SPA (должно быть после всех API маршрутов и статики)
 app.get('*', (req, res, next) => {
   // Если это API запрос, пропускаем дальше
   if (req.path.startsWith('/api/')) {
     return next();
   }
-  // Если запрашивается статический файл (CSS, JS, изображения), пропускаем
+  // Если запрашивается статический файл, пропускаем (express.static должен был обработать)
   if (req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
     return next();
   }
