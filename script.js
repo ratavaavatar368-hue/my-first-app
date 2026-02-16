@@ -197,6 +197,31 @@ async function createBooking(propertyId, checkIn, checkOut, guests) {
   }
 }
 
+// Reviews Functions
+async function loadReviews(propertyId) {
+  try {
+    const data = await apiRequest(`/properties/${propertyId}/reviews`);
+    return data;
+  } catch (error) {
+    console.error("Error loading reviews:", error);
+    return [];
+  }
+}
+
+async function addReview(propertyId, rating, comment) {
+  try {
+    const data = await apiRequest(`/properties/${propertyId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({ rating, comment }),
+    });
+    showNotification("Отзыв успешно добавлен!", "success");
+    return data;
+  } catch (error) {
+    showNotification(error.message, "error");
+    throw error;
+  }
+}
+
 // UI Helper Functions
 function formatPrice(price) {
   return `$${price.toLocaleString("en-US")}`;
@@ -272,6 +297,9 @@ function renderListings(listings) {
           ${(listing.amenities || []).slice(0, 2).map((tag) => `<span class="card__tag">${tag}</span>`).join("")}
         </div>
         ${currentUser ? `<button class="card__book-btn" data-property-id="${listing.id}">Забронировать</button>` : ""}
+        <button class="card__reviews-btn" data-property-id="${listing.id}" data-property-title="${listing.title}">
+          Посмотреть отзывы (${listing.reviews || 0})
+        </button>
       </div>
     `;
 
@@ -464,6 +492,14 @@ function attachEvents() {
       showModal("booking-modal");
       document.getElementById("booking-property-id").value = propertyId;
     }
+
+    // Reviews button
+    const reviewsBtn = e.target.closest(".card__reviews-btn");
+    if (reviewsBtn) {
+      const propertyId = reviewsBtn.dataset.propertyId;
+      const propertyTitle = reviewsBtn.dataset.propertyTitle;
+      await showReviewsModal(propertyId, propertyTitle);
+    }
   });
 
   // Modal close buttons
@@ -554,12 +590,56 @@ function attachEvents() {
   });
 }
 
+// Reviews Modal Functions
+async function showReviewsModal(propertyId, propertyTitle) {
+  const reviews = await loadReviews(propertyId);
+  const modal = document.getElementById("reviews-modal");
+  const reviewsContainer = document.getElementById("reviews-list");
+  const propertyTitleEl = document.getElementById("reviews-property-title");
+  
+  if (propertyTitleEl) {
+    propertyTitleEl.textContent = propertyTitle || "Отзывы";
+  }
+  
+  if (reviewsContainer) {
+    if (reviews.length === 0) {
+      reviewsContainer.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--color-text-light);">
+          <p>Пока нет отзывов. Будьте первым!</p>
+        </div>
+      `;
+    } else {
+      reviewsContainer.innerHTML = reviews.map(review => `
+        <div class="review-item" style="padding: 16px; border-bottom: 1px solid var(--color-border);">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+            <div>
+              <strong style="font-size: 14px;">${review.userName}</strong>
+              <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+                <span style="font-size: 12px; color: var(--color-text-light); margin-left: 8px;">
+                  ${new Date(review.date).toLocaleDateString('ru-RU')}
+                </span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size: 14px; color: var(--color-text); line-height: 1.5; margin: 0;">
+            ${review.comment}
+          </p>
+        </div>
+      `).join('');
+    }
+  }
+  
+  showModal("reviews-modal");
+}
+
 // Make functions available globally for inline scripts
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.logout = logout;
 window.getMySubscription = getMySubscription;
 window.loadSubscriptionPlans = loadSubscriptionPlans;
+window.showReviewsModal = showReviewsModal;
 
 // Initialize
 document.addEventListener("DOMContentLoaded", async () => {
