@@ -23,6 +23,9 @@ const USERS_FILE = path.join(DATA_DIR, "users.json");
 const PROPERTIES_FILE = path.join(DATA_DIR, "properties.json");
 const BOOKINGS_FILE = path.join(DATA_DIR, "bookings.json");
 const SUBSCRIPTIONS_FILE = path.join(DATA_DIR, "subscriptions.json");
+const REVIEWS_FILE = path.join(DATA_DIR, "reviews.json");
+const DEMO_PROPERTIES_FILE = path.join(DATA_DIR, "demo-properties.json");
+const DEMO_REVIEWS_FILE = path.join(DATA_DIR, "demo-reviews.json");
 
 // Инициализация данных
 async function initData() {
@@ -35,17 +38,71 @@ async function initData() {
       { path: PROPERTIES_FILE, default: [] },
       { path: BOOKINGS_FILE, default: [] },
       { path: SUBSCRIPTIONS_FILE, default: [] },
+      { path: REVIEWS_FILE, default: [] },
     ];
 
     for (const file of files) {
       try {
         await fs.access(file.path);
+        // Если файл существует, проверяем его размер
+        const stats = await fs.stat(file.path);
+        if (stats.size === 0) {
+          // Если файл пустой, загружаем демо данные
+          await loadDemoData(file.path);
+        }
       } catch {
-        await fs.writeFile(file.path, JSON.stringify(file.default, null, 2));
+        // Файл не существует, создаем и загружаем демо данные
+        await loadDemoData(file.path);
       }
+    }
+
+    // Загружаем демо данные для properties и reviews если файлы пустые
+    try {
+      const properties = await readData(PROPERTIES_FILE);
+      if (properties.length === 0) {
+        const demoProperties = await readData(DEMO_PROPERTIES_FILE);
+        if (demoProperties.length > 0) {
+          await writeData(PROPERTIES_FILE, demoProperties);
+          console.log(`Загружено ${demoProperties.length} демо объектов недвижимости`);
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки демо объектов:", error);
+    }
+
+    try {
+      const reviews = await readData(REVIEWS_FILE);
+      if (reviews.length === 0) {
+        const demoReviews = await readData(DEMO_REVIEWS_FILE);
+        if (demoReviews.length > 0) {
+          await writeData(REVIEWS_FILE, demoReviews);
+          console.log(`Загружено ${demoReviews.length} демо отзывов`);
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки демо отзывов:", error);
     }
   } catch (error) {
     console.error("Ошибка инициализации данных:", error);
+  }
+}
+
+// Загрузка демо данных
+async function loadDemoData(filePath) {
+  try {
+    // Определяем какой файл создаем
+    if (filePath === PROPERTIES_FILE) {
+      const demoData = await readData(DEMO_PROPERTIES_FILE);
+      await writeData(filePath, demoData.length > 0 ? demoData : []);
+    } else if (filePath === REVIEWS_FILE) {
+      const demoData = await readData(DEMO_REVIEWS_FILE);
+      await writeData(filePath, demoData.length > 0 ? demoData : []);
+    } else {
+      await writeData(filePath, []);
+    }
+  } catch (error) {
+    // Если демо файл не найден, создаем пустой файл
+    await writeData(filePath, []);
   }
 }
 
@@ -351,7 +408,25 @@ app.post("/api/subscriptions/subscribe", authenticateToken, async (req, res) => 
 app.get("/api/properties", async (req, res) => {
   try {
     const properties = await readData(PROPERTIES_FILE);
-    res.json(properties);
+    
+    // Загружаем отзывы для расчета рейтингов
+    const reviews = await readData(REVIEWS_FILE);
+    
+    // Обновляем рейтинги и количество отзывов для каждого объекта
+    const propertiesWithReviews = properties.map((property) => {
+      const propertyReviews = reviews.filter((r) => r.propertyId === property.id);
+      const avgRating = propertyReviews.length > 0
+        ? propertyReviews.reduce((sum, r) => sum + r.rating, 0) / propertyReviews.length
+        : property.rating || 0;
+      
+      return {
+        ...property,
+        rating: avgRating,
+        reviews: propertyReviews.length || property.reviews || 0,
+      };
+    });
+    
+    res.json(propertiesWithReviews);
   } catch (error) {
     res.status(500).json({ error: "Ошибка получения объектов" });
   }
@@ -367,7 +442,21 @@ app.get("/api/properties/:id", async (req, res) => {
       return res.status(404).json({ error: "Объект не найден" });
     }
 
-    res.json(property);
+    // Загружаем отзывы для объекта
+    const reviews = await readData(REVIEWS_FILE);
+    const propertyReviews = reviews.filter((r) => r.propertyId === property.id);
+
+    // Вычисляем средний рейтинг и количество отзывов
+    const avgRating = propertyReviews.length > 0
+      ? propertyReviews.reduce((sum, r) => sum + r.rating, 0) / propertyReviews.length
+      : 0;
+
+    res.json({
+      ...property,
+      rating: avgRating,
+      reviews: propertyReviews.length,
+      reviewsList: propertyReviews.slice(0, 10), // Последние 10 отзывов
+    });
   } catch (error) {
     res.status(500).json({ error: "Ошибка получения объекта" });
   }
@@ -630,6 +719,84 @@ app.put("/api/bookings/:id/status", authenticateToken, checkSubscription, async 
     });
   } catch (error) {
     res.status(500).json({ error: "Ошибка обновления статуса" });
+  }
+});
+
+// ========== ОТЗЫВЫ ==========
+
+// Получение отзывов для объекта
+app.get("/api/properties/:id/reviews", async (req, res) => {
+  try {
+    const reviews = await readData(REVIEWS_FILE);
+    const propertyReviews = reviews
+      .filter((r) => r.propertyId === req.params.id)
+      .sort((a, b) => new Date(b.date) - new Date(a.date)); // Сортировка по дате (новые первые)
+
+    res.json(propertyReviews);
+  } catch (error) {
+    res.status(500).json({ error: "Ошибка получения отзывов" });
+  }
+});
+
+// Добавление отзыва
+app.post("/api/properties/:id/reviews", authenticateToken, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const propertyId = req.params.id;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Рейтинг должен быть от 1 до 5" });
+    }
+
+    if (!comment || comment.trim().length === 0) {
+      return res.status(400).json({ error: "Комментарий обязателен" });
+    }
+
+    // Проверяем существование объекта
+    const properties = await readData(PROPERTIES_FILE);
+    const property = properties.find((p) => p.id === propertyId);
+    if (!property) {
+      return res.status(404).json({ error: "Объект не найден" });
+    }
+
+    // Получаем данные пользователя
+    const users = await readData(USERS_FILE);
+    const user = users.find((u) => u.id === req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
+
+    const reviews = await readData(REVIEWS_FILE);
+    const newReview = {
+      id: uuidv4(),
+      propertyId,
+      userId: req.user.userId,
+      userName: user.name,
+      rating: parseInt(rating),
+      comment: comment.trim(),
+      date: new Date().toISOString(),
+    };
+
+    reviews.push(newReview);
+    await writeData(REVIEWS_FILE, reviews);
+
+    // Обновляем рейтинг объекта
+    const propertyReviews = reviews.filter((r) => r.propertyId === propertyId);
+    const avgRating = propertyReviews.reduce((sum, r) => sum + r.rating, 0) / propertyReviews.length;
+    
+    const propertyIndex = properties.findIndex((p) => p.id === propertyId);
+    if (propertyIndex !== -1) {
+      properties[propertyIndex].rating = avgRating;
+      properties[propertyIndex].reviews = propertyReviews.length;
+      await writeData(PROPERTIES_FILE, properties);
+    }
+
+    res.status(201).json({
+      message: "Отзыв успешно добавлен",
+      review: newReview,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Ошибка добавления отзыва" });
   }
 });
 
