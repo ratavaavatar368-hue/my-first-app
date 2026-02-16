@@ -677,7 +677,7 @@ app.get('*', (req, res, next) => {
     return next();
   }
   // Иначе отдаем index.html для SPA
-  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+  res.sendFile(path.join(staticPath, 'index.html'), (err) => {
     if (err) {
       console.error('Error sending index.html:', err);
       res.status(404).send('File not found');
